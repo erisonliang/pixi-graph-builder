@@ -12,7 +12,8 @@
   },
   "devDependencies": {},
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "NE=prod webpack",
+    "live": "webpack"
   },
   "author": "",
   "license": "ISC"

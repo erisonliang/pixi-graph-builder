@@ -3,10 +3,10 @@ var webpack = require('webpack'),
     dev = (process.env.NE || 'dev') === 'dev';
 
 module.exports = {
-    entry: "./src/GB",
+    entry: "./src/index",
     output: {
         path: __dirname + "/build",
-        filename: dev ? "GB.js" : 'GB.min.js',
+        filename: dev ? "pixi-graph-builder.js" : 'pixi-graph-builder.min.js',
         library: 'GB'
     },
     watch: dev,
