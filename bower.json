@@ -1,0 +1,18 @@
+{
+  "name": "pixi-graph-builder",
+  "description": "",
+  "main": "webpack.config.js",
+  "authors": [
+    "SergNikolaev <iintersergey@gmail.com>"
+  ],
+  "license": "ISC",
+  "homepage": "",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
