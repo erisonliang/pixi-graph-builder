@@ -1,4 +1,4 @@
-module.exports = function (view, nodeTypes, keyNodes, events) {
+module.exports = function (view, nodeTypes, keyNodes, config) {
     this.data = {
         "nodes": [],
         "links": []
@@ -11,7 +11,6 @@ module.exports = function (view, nodeTypes, keyNodes, events) {
         .gravity(0.002)
         .charge(-100)
         .linkDistance(35);
-    // .size([s.view.width, s.view.height]);
 
     this.addNode = function (data) {
         if (this.findNode(data.id)) {
@@ -34,6 +33,7 @@ module.exports = function (view, nodeTypes, keyNodes, events) {
             x: data.pos ? data.pos.x : undefined,
             y: data.pos ? data.pos.y : undefined,
             multiId: data.multiId,
+            type: data.type,
             $node: node
         });
 
@@ -50,9 +50,9 @@ module.exports = function (view, nodeTypes, keyNodes, events) {
                 nodeType.events[key](move, d.nodes[index - 1]);
             });
         }
-        for (var key in events) {
+        for (var key in config.events) {
             node.on(key, function (move) {
-                events[key](move, d.nodes[index - 1]);
+                config.events[key](move, d.nodes[index - 1]);
             });
         }
         this.force.start();
@@ -60,10 +60,19 @@ module.exports = function (view, nodeTypes, keyNodes, events) {
         return this.data.nodes[index - 1];
     };
 
-    this.addLink = function (source, target, value, cone) {
+    this.addLink = function (source, target, value) {
         var source = this.findNode(source),
             target = this.findNode(target),
             link = new PIXI.Graphics();
+
+        if (config.links.directed) {
+            var arrowHead = PIXI.Sprite.fromImage(config.links.directed.arrow);
+            arrowHead.scale.x = config.links.directed.scale || 1;
+            arrowHead.scale.y = config.links.directed.scale || 1;
+            arrowHead.anchor.x = 0.5;
+            arrowHead.anchor.y = 0.5;
+            link.addChild(arrowHead);
+        }
 
         view.links.addChild(link);
 

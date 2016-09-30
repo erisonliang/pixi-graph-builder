@@ -34,19 +34,27 @@ module.exports = function (graph, config, keyNodes) {
         keyNodes.draggable = undefined;
         isDragging = false;
     });
+    onWheel({deltaY: 0});
 
-    graph.view.renderer.view.addEventListener("wheel", function onWheel(e) {
-        if (e.deltaY > 0) scale -= graph.view.graph.scale.x * 0.05;
-        else scale += graph.view.graph.scale.x * 0.05;
-        //zoom beetwen 0.01 and 10
-        if (scale <= (config.zoom.min || 0.01)) {
-            scale = config.zoom.min || 0.01;
+    graph.view.renderer.view.addEventListener("wheel", onWheel);
+    function onWheel(e) {
+        var min = config.zoom && config.zoom.min || .01,
+            max = config.zoom && config.zoom.max || 3;
+        if (e.deltaY > 0) scale -= graph.view.graph.scale.x * .05;
+        else scale += graph.view.graph.scale.x * .05;
+
+        if (scale <= min) {
+            scale = min;
         }
-        if (scale >= (config.zoom.max || 10)) {
-            scale = config.zoom.max || 10;
+        if (scale >= max) {
+            scale = max;
         }
+        graph.model.data.nodes.forEach(function (item) {
+            item.$node.scale.x = item.$node.scale.y = (max + graph.initialConfig.nodeTypes[item.type].scale || 0.3) - scale;
+        });
         graph.view.graph.scale.x = graph.view.graph.scale.y = scale;
-    });
+    }
+
     graph.view.renderer.view.addEventListener("contextmenu", function (e) {
         e.preventDefault();
     });

@@ -45,18 +45,19 @@ var GB =
 /* 0 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports.version = '0.0.1';
+	exports.version = '0.0.3';
 	exports.create = function (config) {
 	    var view = __webpack_require__(1),
 	        model = __webpack_require__(2);
 
 	    var graph = {
+	            initialConfig: config,
 	            view: new view(config.view),
 	            nodeTypes: config.nodeTypes
 	        },
 	        keyNodes = {};
 
-	    graph.model = new model(graph.view, graph.nodeTypes, keyNodes, config.events);
+	    graph.model = new model(graph.view, graph.nodeTypes, keyNodes, config);
 
 	    graph.view.graph.interactive = true;
 
@@ -99,7 +100,7 @@ var GB =
 /* 2 */
 /***/ function(module, exports) {
 
-	module.exports = function (view, nodeTypes, keyNodes, events) {
+	module.exports = function (view, nodeTypes, keyNodes, config) {
 	    this.data = {
 	        "nodes": [],
 	        "links": []
@@ -112,7 +113,6 @@ var GB =
 	        .gravity(0.002)
 	        .charge(-100)
 	        .linkDistance(35);
-	    // .size([s.view.width, s.view.height]);
 
 	    this.addNode = function (data) {
 	        if (this.findNode(data.id)) {
@@ -135,6 +135,7 @@ var GB =
 	            x: data.pos ? data.pos.x : undefined,
 	            y: data.pos ? data.pos.y : undefined,
 	            multiId: data.multiId,
+	            type: data.type,
 	            $node: node
 	        });
 
@@ -151,9 +152,9 @@ var GB =
 	                nodeType.events[key](move, d.nodes[index - 1]);
 	            });
 	        }
-	        for (var key in events) {
+	        for (var key in config.events) {
 	            node.on(key, function (move) {
-	                events[key](move, d.nodes[index - 1]);
+	                config.events[key](move, d.nodes[index - 1]);
 	            });
 	        }
 	        this.force.start();
@@ -161,10 +162,19 @@ var GB =
 	        return this.data.nodes[index - 1];
 	    };
 
-	    this.addLink = function (source, target, value, cone) {
+	    this.addLink = function (source, target, value) {
 	        var source = this.findNode(source),
 	            target = this.findNode(target),
 	            link = new PIXI.Graphics();
+
+	        if (config.links.directed) {
+	            var arrowHead = PIXI.Sprite.fromImage(config.links.directed.arrow);
+	            arrowHead.scale.x = config.links.directed.scale || 1;
+	            arrowHead.scale.y = config.links.directed.scale || 1;
+	            arrowHead.anchor.x = 0.5;
+	            arrowHead.anchor.y = 0.5;
+	            link.addChild(arrowHead);
+	        }
 
 	        view.links.addChild(link);
 
@@ -227,19 +237,27 @@ var GB =
 	        keyNodes.draggable = undefined;
 	        isDragging = false;
 	    });
+	    onWheel({deltaY: 0});
 
-	    graph.view.renderer.view.addEventListener("wheel", function onWheel(e) {
-	        if (e.deltaY > 0) scale -= graph.view.graph.scale.x * 0.05;
-	        else scale += graph.view.graph.scale.x * 0.05;
-	        //zoom beetwen 0.01 and 10
-	        if (scale <= (config.zoom.min || 0.01)) {
-	            scale = config.zoom.min || 0.01;
+	    graph.view.renderer.view.addEventListener("wheel", onWheel);
+	    function onWheel(e) {
+	        var min = config.zoom && config.zoom.min || .01,
+	            max = config.zoom && config.zoom.max || 3;
+	        if (e.deltaY > 0) scale -= graph.view.graph.scale.x * .05;
+	        else scale += graph.view.graph.scale.x * .05;
+
+	        if (scale <= min) {
+	            scale = min;
 	        }
-	        if (scale >= (config.zoom.max || 10)) {
-	            scale = config.zoom.max || 10;
+	        if (scale >= max) {
+	            scale = max;
 	        }
+	        graph.model.data.nodes.forEach(function (item) {
+	            item.$node.scale.x = item.$node.scale.y = (max + graph.initialConfig.nodeTypes[item.type].scale || 0.3) - scale;
+	        });
 	        graph.view.graph.scale.x = graph.view.graph.scale.y = scale;
-	    });
+	    }
+
 	    graph.view.renderer.view.addEventListener("contextmenu", function (e) {
 	        e.preventDefault();
 	    });
@@ -259,9 +277,18 @@ var GB =
 	        });
 	        graph.model.data.links.forEach(function (i) {
 	            i.$link.clear();
-	            i.$link.lineStyle(3, 0x2980b9, 1);
+	            i.$link.lineStyle(
+	                graph.initialConfig.links.width || 1,
+	                graph.initialConfig.links.color || 0x000000,
+	                graph.initialConfig.links.opacity || 1);
 	            i.$link.moveTo(i.target.x, i.target.y);
 	            i.$link.lineTo(i.source.x, i.source.y);
+
+	            if (i.$link.children[0]) {
+	                i.$link.children[0].position.x = (i.target.x + i.source.x) / 2;
+	                i.$link.children[0].position.y = (i.target.y + i.source.y) / 2;
+	                i.$link.children[0].rotation = Math.atan2(i.target.y - i.source.y, i.target.x - i.source.x);
+	            }
 	        });
 	        requestAnimationFrame(animate);
 	        graph.view.renderer.render(graph.view.stage);

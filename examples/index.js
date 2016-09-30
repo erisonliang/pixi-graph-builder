@@ -4,14 +4,21 @@ setTimeout(function () {
                 circle: {
                     texture: 'textures/circle.png',
                     scale: 1,
-                    draggable: true,
-                    events: {}
+                    draggable: true
                 },
                 square: {
                     texture: 'textures/square.png',
                     scale: 1,
-                    draggable: true,
-                    events: {}
+                    draggable: true
+                }
+            },
+            links: {
+                width: 2,
+                color: 0xe74c3c,
+                opacity: .6,
+                directed: {
+                    arrow: 'textures/arrowhead.png',
+                    scale: .3
                 }
             },
             view: {
@@ -31,8 +38,11 @@ setTimeout(function () {
 
     for (var i = 0; i < 50; i++) {
         graph.model.addNode({id: i, type: Math.random() >= 0.5 ? 'circle' : 'square'});
+        if (last)
+            graph.model.addLink(last, i, 1);
+        last = i;
     }
-    for (var i = 0; i < 50; i++) {
+    for (var i = 0; i < 10; i++) {
         graph.model.addLink(
             graph.model.data.nodes[Math.floor(Math.random() * 50)].id,
             graph.model.data.nodes[Math.floor(Math.random() * 50)].id,
