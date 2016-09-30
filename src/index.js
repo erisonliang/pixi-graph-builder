@@ -9,7 +9,9 @@ exports.create = function (config) {
         },
         keyNodes = {};
 
-    graph.model = new model(graph.view, graph.nodeTypes, keyNodes);
+    graph.model = new model(graph.view, graph.nodeTypes, keyNodes, config.events);
+
+    graph.view.graph.interactive = true;
 
     if (config.view.controls) {
         require('./controls')(graph, config.view.controls, keyNodes);

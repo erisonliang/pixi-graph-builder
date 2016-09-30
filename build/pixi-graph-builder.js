@@ -56,7 +56,9 @@ var GB =
 	        },
 	        keyNodes = {};
 
-	    graph.model = new model(graph.view, graph.nodeTypes, keyNodes);
+	    graph.model = new model(graph.view, graph.nodeTypes, keyNodes, config.events);
+
+	    graph.view.graph.interactive = true;
 
 	    if (config.view.controls) {
 	        __webpack_require__(3)(graph, config.view.controls, keyNodes);
@@ -97,7 +99,7 @@ var GB =
 /* 2 */
 /***/ function(module, exports) {
 
-	module.exports = function (view, nodeTypes, keyNodes) {
+	module.exports = function (view, nodeTypes, keyNodes, events) {
 	    this.data = {
 	        "nodes": [],
 	        "links": []
@@ -147,6 +149,11 @@ var GB =
 	        for (var key in nodeType.events) {
 	            node.on(key, function (move) {
 	                nodeType.events[key](move, d.nodes[index - 1]);
+	            });
+	        }
+	        for (var key in events) {
+	            node.on(key, function (move) {
+	                events[key](move, d.nodes[index - 1]);
 	            });
 	        }
 	        this.force.start();

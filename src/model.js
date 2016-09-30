@@ -1,4 +1,4 @@
-module.exports = function (view, nodeTypes, keyNodes) {
+module.exports = function (view, nodeTypes, keyNodes, events) {
     this.data = {
         "nodes": [],
         "links": []
@@ -48,6 +48,11 @@ module.exports = function (view, nodeTypes, keyNodes) {
         for (var key in nodeType.events) {
             node.on(key, function (move) {
                 nodeType.events[key](move, d.nodes[index - 1]);
+            });
+        }
+        for (var key in events) {
+            node.on(key, function (move) {
+                events[key](move, d.nodes[index - 1]);
             });
         }
         this.force.start();

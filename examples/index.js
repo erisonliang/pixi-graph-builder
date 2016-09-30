@@ -5,11 +5,7 @@ setTimeout(function () {
                     texture: 'textures/circle.png',
                     scale: 1,
                     draggable: true,
-                    events: {
-                        rightclick: function (e, d) {
-                            console.log(e, d);
-                        }
-                    }
+                    events: {}
                 },
                 square: {
                     texture: 'textures/square.png',
@@ -36,7 +32,7 @@ setTimeout(function () {
     for (var i = 0; i < 50; i++) {
         graph.model.addNode({id: i, type: Math.random() >= 0.5 ? 'circle' : 'square'});
     }
-    for (var i = 0; i < 30; i++) {
+    for (var i = 0; i < 50; i++) {
         graph.model.addLink(
             graph.model.data.nodes[Math.floor(Math.random() * 50)].id,
             graph.model.data.nodes[Math.floor(Math.random() * 50)].id,
