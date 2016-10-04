@@ -13,12 +13,12 @@ setTimeout(function () {
                 }
             },
             links: {
-                width: 2,
-                color: 0xe74c3c,
-                opacity: .6,
+                width: 10,
+                color: 0x3498db,
+                opacity: .4,
                 directed: {
                     arrow: 'textures/arrowhead.png',
-                    scale: .3
+                    scale: 1
                 }
             },
             view: {
@@ -27,27 +27,24 @@ setTimeout(function () {
                 width: window.innerWidth,
                 height: window.innerHeight,
                 controls: {
+                    autoScale: true,
                     zoom: {
-                        max: 2,
-                        min: .3
+                        start: .1,
+                        max: 1,
+                        min: .1
                     }
                 }
             }
         },
         graph = GB.create(config), last;
 
-    for (var i = 0; i < 50; i++) {
+    for (var i = 0; i < 1500; i++) {
         graph.model.addNode({id: i, type: Math.random() >= 0.5 ? 'circle' : 'square'});
         if (last)
             graph.model.addLink(last, i, 1);
         last = i;
     }
-    for (var i = 0; i < 10; i++) {
-        graph.model.addLink(
-            graph.model.data.nodes[Math.floor(Math.random() * 50)].id,
-            graph.model.data.nodes[Math.floor(Math.random() * 50)].id,
-            1)
-    }
+
     // setInterval(function () {
     //     var now = Math.random();
     //     graph.model.addNode({id: now, type: 'circle'});

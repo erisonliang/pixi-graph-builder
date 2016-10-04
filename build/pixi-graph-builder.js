@@ -203,7 +203,7 @@ var GB =
 
 	module.exports = function (graph, config, keyNodes) {
 	    var isDragging = false,
-	        prevX, prevY, scale = 1;
+	        prevX, prevY;
 
 	    graph.view.stage.hitArea = new PIXI.Rectangle(0, 0, window.innerWidth, window.innerHeight);
 	    graph.view.stage.interactive = true;
@@ -226,7 +226,6 @@ var GB =
 	        if (!isDragging) {
 	            return;
 	        }
-	        graph.model.force.start();
 
 	        graph.view.graph.position.x += pos.x - prevX;
 	        graph.view.graph.position.y += pos.y - prevY;
@@ -237,25 +236,45 @@ var GB =
 	        keyNodes.draggable = undefined;
 	        isDragging = false;
 	    });
-	    onWheel({deltaY: 0});
 
-	    graph.view.renderer.view.addEventListener("wheel", onWheel);
-	    function onWheel(e) {
+
+	    graph.view.renderer.view.addEventListener("wheel", zoom);
+
+	    function zoom(e) {
 	        var min = config.zoom && config.zoom.min || .01,
-	            max = config.zoom && config.zoom.max || 3;
-	        if (e.deltaY > 0) scale -= graph.view.graph.scale.x * .05;
-	        else scale += graph.view.graph.scale.x * .05;
+	            max = config.zoom && config.zoom.max || 3,
+	            s = e.deltaY, x = e.offsetX, y = e.offsetY;
 
-	        if (scale <= min) {
-	            scale = min;
+	        s = s > 0 ? .9 : 1.1;
+
+	        var worldPos = {
+	            x: (x - graph.view.graph.x) / graph.view.graph.scale.x,
+	            y: (y - graph.view.graph.y) / graph.view.graph.scale.y
+	        };
+	        s = graph.view.graph.scale.y * s;
+
+	        if (s <= min) {
+	            s = min;
 	        }
-	        if (scale >= max) {
-	            scale = max;
+	        if (s >= max) {
+	            s = max;
 	        }
-	        graph.model.data.nodes.forEach(function (item) {
-	            item.$node.scale.x = item.$node.scale.y = (max + graph.initialConfig.nodeTypes[item.type].scale || 0.3) - scale;
-	        });
-	        graph.view.graph.scale.x = graph.view.graph.scale.y = scale;
+
+	        var newScreenPos = {
+	            x: (worldPos.x ) * s + graph.view.graph.x,
+	            y: (worldPos.y) * s + graph.view.graph.y
+	        };
+
+	        if (config.autoScale) {
+	            graph.model.data.nodes.forEach(function (item) {
+	                item.$node.scale.x = item.$node.scale.y = ((max + 1) + graph.initialConfig.nodeTypes[item.type].scale || 0.3) - s;
+	            });
+	        }
+
+	        graph.view.graph.x -= (newScreenPos.x - x);
+	        graph.view.graph.y -= (newScreenPos.y - y);
+	        graph.view.graph.scale.x = s;
+	        graph.view.graph.scale.y = s;
 	    }
 
 	    graph.view.renderer.view.addEventListener("contextmenu", function (e) {
