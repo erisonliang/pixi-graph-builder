@@ -2,38 +2,19 @@ setTimeout(function () {
     var config = {
             nodeTypes: {
                 circle: {
-                    texture: 'textures/circle.png',
-                    scale: 1,
-                    draggable: true
+                    texture: 'textures/circle.png'
                 },
                 square: {
-                    texture: 'textures/square.png',
-                    scale: 1,
-                    draggable: true
+                    texture: 'textures/square.png'
                 }
             },
             links: {
-                width: 10,
-                color: 0x3498db,
-                opacity: .4,
                 directed: {
-                    arrow: 'textures/arrowhead.png',
-                    scale: 1
+                    arrow: 'textures/arrowhead.png'
                 }
             },
             view: {
-                element: 'graph',
-                transparent: true,
-                width: window.innerWidth,
-                height: window.innerHeight,
-                controls: {
-                    autoScale: true,
-                    zoom: {
-                        start: .1,
-                        max: 1,
-                        min: .1
-                    }
-                }
+                element: 'graph'
             }
         },
         graph = GB.create(config), last;

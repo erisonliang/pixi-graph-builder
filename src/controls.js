@@ -1,8 +1,8 @@
-module.exports = function (graph, config, keyNodes) {
+module.exports = function (graph, keyNodes) {
     var isDragging = false,
         prevX, prevY;
 
-    graph.view.stage.hitArea = new PIXI.Rectangle(0, 0, window.innerWidth, window.innerHeight);
+    graph.view.stage.hitArea = new PIXI.Rectangle(0, 0, graph.view.width, graph.view.height);
     graph.view.stage.interactive = true;
     graph.view.stage.on('mousedown', function (move) {
         var pos = move.data.global;
@@ -38,8 +38,8 @@ module.exports = function (graph, config, keyNodes) {
     graph.view.renderer.view.addEventListener("wheel", zoom);
 
     function zoom(e) {
-        var min = config.zoom && config.zoom.min || .01,
-            max = config.zoom && config.zoom.max || 3,
+        var min = graph.config.view.controls.zoom && graph.config.view.controls.zoom.min || .01,
+            max = graph.config.view.controls.zoom && graph.config.view.controls.zoom.max || 3,
             s = e.deltaY, x = e.offsetX, y = e.offsetY;
 
         s = s > 0 ? .9 : 1.1;
@@ -62,9 +62,9 @@ module.exports = function (graph, config, keyNodes) {
             y: (worldPos.y) * s + graph.view.graph.y
         };
 
-        if (config.autoScale) {
+        if (graph.config.view.controls.autoScale) {
             graph.model.data.nodes.forEach(function (item) {
-                item.$node.scale.x = item.$node.scale.y = ((max + 1) + graph.initialConfig.nodeTypes[item.type].scale || 0.3) - s;
+                item.$node.scale.x = item.$node.scale.y = ((max + 1) + graph.config.nodeTypes[item.type].scale || 0.3) - s;
             });
         }
 

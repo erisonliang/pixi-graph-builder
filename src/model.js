@@ -1,4 +1,4 @@
-module.exports = function (view, nodeTypes, keyNodes, config) {
+module.exports = function (graph, keyNodes) {
     this.data = {
         "nodes": [],
         "links": []
@@ -16,7 +16,7 @@ module.exports = function (view, nodeTypes, keyNodes, config) {
         if (this.findNode(data.id)) {
             return;
         }
-        var nodeType = nodeTypes[data.type],
+        var nodeType = graph.nodeTypes[data.type],
             node = PIXI.Sprite.fromImage(nodeType.texture);
 
         node.scale.x = nodeType.scale || 1;
@@ -24,7 +24,7 @@ module.exports = function (view, nodeTypes, keyNodes, config) {
         node.anchor.x = 0.5;
         node.anchor.y = 0.5;
 
-        view.graph.addChild(node);
+        graph.view.graph.addChild(node);
 
         var index = this.data.nodes.push({
             id: data.id,
@@ -50,9 +50,9 @@ module.exports = function (view, nodeTypes, keyNodes, config) {
                 nodeType.events[key](move, d.nodes[index - 1]);
             });
         }
-        for (var key in config.events) {
+        for (var key in graph.config.events) {
             node.on(key, function (move) {
-                config.events[key](move, d.nodes[index - 1]);
+                graph.config.events[key](move, d.nodes[index - 1]);
             });
         }
         this.force.start();
@@ -65,16 +65,16 @@ module.exports = function (view, nodeTypes, keyNodes, config) {
             target = this.findNode(target),
             link = new PIXI.Graphics();
 
-        if (config.links.directed) {
-            var arrowHead = PIXI.Sprite.fromImage(config.links.directed.arrow);
-            arrowHead.scale.x = config.links.directed.scale || 1;
-            arrowHead.scale.y = config.links.directed.scale || 1;
+        if (graph.config.links.directed) {
+            var arrowHead = PIXI.Sprite.fromImage(graph.config.links.directed.arrow);
+            arrowHead.scale.x = graph.config.links.directed.scale || 1;
+            arrowHead.scale.y = graph.config.links.directed.scale || 1;
             arrowHead.anchor.x = 0.5;
             arrowHead.anchor.y = 0.5;
             link.addChild(arrowHead);
         }
 
-        view.links.addChild(link);
+        graph.view.links.addChild(link);
 
         this.data.links.push({
             "source": source,

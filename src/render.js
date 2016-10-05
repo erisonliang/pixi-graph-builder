@@ -9,9 +9,9 @@ module.exports = function (graph) {
         graph.model.data.links.forEach(function (i) {
             i.$link.clear();
             i.$link.lineStyle(
-                graph.initialConfig.links.width || 1,
-                graph.initialConfig.links.color || 0x000000,
-                graph.initialConfig.links.opacity || 1);
+                graph.config.links.width,
+                graph.config.links.color,
+                graph.config.links.opacity);
             i.$link.moveTo(i.target.x, i.target.y);
             i.$link.lineTo(i.source.x, i.source.y);
 

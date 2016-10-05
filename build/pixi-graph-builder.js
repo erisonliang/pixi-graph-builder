@@ -48,23 +48,24 @@ var GB =
 	exports.version = '0.0.3';
 	exports.create = function (config) {
 	    var view = __webpack_require__(1),
-	        model = __webpack_require__(2);
+	        model = __webpack_require__(2),
+	        config = __webpack_require__(3)(config);
 
 	    var graph = {
-	            initialConfig: config,
+	            config: config,
 	            view: new view(config.view),
 	            nodeTypes: config.nodeTypes
 	        },
 	        keyNodes = {};
 
-	    graph.model = new model(graph.view, graph.nodeTypes, keyNodes, config);
+	    graph.model = new model(graph, keyNodes);
 
 	    graph.view.graph.interactive = true;
 
 	    if (config.view.controls) {
-	        __webpack_require__(3)(graph, config.view.controls, keyNodes);
+	        __webpack_require__(4)(graph, keyNodes);
 	    }
-	    __webpack_require__(4)(graph);
+	    __webpack_require__(5)(graph);
 
 	    return graph;
 	};
@@ -74,14 +75,14 @@ var GB =
 /***/ function(module, exports) {
 
 	module.exports = function (cfg) {
-	    this.width = cfg.width || window.innerWidth;
-	    this.height = cfg.height || window.innerWidth;
+	    this.width = cfg.width;
+	    this.height = cfg.height;
 
 	    this.renderer = new PIXI.WebGLRenderer(
 	        this.width,
 	        this.height,
 	        {
-	            transparent: cfg.transparent || false
+	            transparent: cfg.transparent
 	        });
 	    this.stage = new PIXI.Container();
 	    this.graph = new PIXI.Container();
@@ -100,7 +101,7 @@ var GB =
 /* 2 */
 /***/ function(module, exports) {
 
-	module.exports = function (view, nodeTypes, keyNodes, config) {
+	module.exports = function (graph, keyNodes) {
 	    this.data = {
 	        "nodes": [],
 	        "links": []
@@ -118,7 +119,7 @@ var GB =
 	        if (this.findNode(data.id)) {
 	            return;
 	        }
-	        var nodeType = nodeTypes[data.type],
+	        var nodeType = graph.nodeTypes[data.type],
 	            node = PIXI.Sprite.fromImage(nodeType.texture);
 
 	        node.scale.x = nodeType.scale || 1;
@@ -126,7 +127,7 @@ var GB =
 	        node.anchor.x = 0.5;
 	        node.anchor.y = 0.5;
 
-	        view.graph.addChild(node);
+	        graph.view.graph.addChild(node);
 
 	        var index = this.data.nodes.push({
 	            id: data.id,
@@ -152,9 +153,9 @@ var GB =
 	                nodeType.events[key](move, d.nodes[index - 1]);
 	            });
 	        }
-	        for (var key in config.events) {
+	        for (var key in graph.config.events) {
 	            node.on(key, function (move) {
-	                config.events[key](move, d.nodes[index - 1]);
+	                graph.config.events[key](move, d.nodes[index - 1]);
 	            });
 	        }
 	        this.force.start();
@@ -167,16 +168,16 @@ var GB =
 	            target = this.findNode(target),
 	            link = new PIXI.Graphics();
 
-	        if (config.links.directed) {
-	            var arrowHead = PIXI.Sprite.fromImage(config.links.directed.arrow);
-	            arrowHead.scale.x = config.links.directed.scale || 1;
-	            arrowHead.scale.y = config.links.directed.scale || 1;
+	        if (graph.config.links.directed) {
+	            var arrowHead = PIXI.Sprite.fromImage(graph.config.links.directed.arrow);
+	            arrowHead.scale.x = graph.config.links.directed.scale || 1;
+	            arrowHead.scale.y = graph.config.links.directed.scale || 1;
 	            arrowHead.anchor.x = 0.5;
 	            arrowHead.anchor.y = 0.5;
 	            link.addChild(arrowHead);
 	        }
 
-	        view.links.addChild(link);
+	        graph.view.links.addChild(link);
 
 	        this.data.links.push({
 	            "source": source,
@@ -201,11 +202,58 @@ var GB =
 /* 3 */
 /***/ function(module, exports) {
 
-	module.exports = function (graph, config, keyNodes) {
+	module.exports = function (config) {
+	    var defaultConfig = {
+	            links: {
+	                width: 10,
+	                color: 0x3498db,
+	                opacity: .5,
+	                directed: false
+	            },
+	            view: {
+	                transparent: true,
+	                width: window.innerWidth,
+	                height: window.innerHeight,
+	                controls: {
+	                    autoScale: true,
+	                    zoom: {
+	                        max: 1.5,
+	                        min: .1
+	                    }
+	                }
+	            }
+	        },
+	        defaultNodeType = {
+	            draggable: true,
+	            scale: 1
+	        };
+
+	    function extend(obj1, obj2) {
+	        Object.keys(obj2).forEach(function (key) {
+	            if (typeof obj1[key] === 'object' && typeof obj2[key] === 'object') {
+	                obj1[key] = extend(obj1[key], obj2[key]);
+	            } else {
+	                obj1[key] = obj2[key];
+	            }
+	        });
+	        return obj1;
+	    }
+
+	    Object.keys(config.nodeTypes).forEach(function (key) {
+	        config.nodeTypes[key] = extend(JSON.parse(JSON.stringify(defaultNodeType)), config.nodeTypes[key]);
+	    });
+	    return extend(defaultConfig, config);
+	};
+
+/***/ },
+/* 4 */
+/***/ function(module, exports) {
+
+	module.exports = function (graph, keyNodes) {
 	    var isDragging = false,
 	        prevX, prevY;
 
-	    graph.view.stage.hitArea = new PIXI.Rectangle(0, 0, window.innerWidth, window.innerHeight);
+	    graph.view.stage.hitArea = new PIXI.Rectangle(0, 0, graph.view.width, graph.view.height);
 	    graph.view.stage.interactive = true;
 	    graph.view.stage.on('mousedown', function (move) {
 	        var pos = move.data.global;
@@ -241,8 +289,8 @@ var GB =
 	    graph.view.renderer.view.addEventListener("wheel", zoom);
 
 	    function zoom(e) {
-	        var min = config.zoom && config.zoom.min || .01,
-	            max = config.zoom && config.zoom.max || 3,
+	        var min = graph.config.view.controls.zoom && graph.config.view.controls.zoom.min || .01,
+	            max = graph.config.view.controls.zoom && graph.config.view.controls.zoom.max || 3,
 	            s = e.deltaY, x = e.offsetX, y = e.offsetY;
 
 	        s = s > 0 ? .9 : 1.1;
@@ -265,9 +313,9 @@ var GB =
 	            y: (worldPos.y) * s + graph.view.graph.y
 	        };
 
-	        if (config.autoScale) {
+	        if (graph.config.view.controls.autoScale) {
 	            graph.model.data.nodes.forEach(function (item) {
-	                item.$node.scale.x = item.$node.scale.y = ((max + 1) + graph.initialConfig.nodeTypes[item.type].scale || 0.3) - s;
+	                item.$node.scale.x = item.$node.scale.y = ((max + 1) + graph.config.nodeTypes[item.type].scale || 0.3) - s;
 	            });
 	        }
 
@@ -283,7 +331,7 @@ var GB =
 	};
 
 /***/ },
-/* 4 */
+/* 5 */
 /***/ function(module, exports) {
 
 	module.exports = function (graph) {
@@ -297,9 +345,9 @@ var GB =
 	        graph.model.data.links.forEach(function (i) {
 	            i.$link.clear();
 	            i.$link.lineStyle(
-	                graph.initialConfig.links.width || 1,
-	                graph.initialConfig.links.color || 0x000000,
-	                graph.initialConfig.links.opacity || 1);
+	                graph.config.links.width,
+	                graph.config.links.color,
+	                graph.config.links.opacity);
 	            i.$link.moveTo(i.target.x, i.target.y);
 	            i.$link.lineTo(i.source.x, i.source.y);
 

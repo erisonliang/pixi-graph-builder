@@ -1,12 +1,12 @@
 module.exports = function (cfg) {
-    this.width = cfg.width || window.innerWidth;
-    this.height = cfg.height || window.innerWidth;
+    this.width = cfg.width;
+    this.height = cfg.height;
 
     this.renderer = new PIXI.WebGLRenderer(
         this.width,
         this.height,
         {
-            transparent: cfg.transparent || false
+            transparent: cfg.transparent
         });
     this.stage = new PIXI.Container();
     this.graph = new PIXI.Container();

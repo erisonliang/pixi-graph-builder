@@ -1,21 +1,22 @@
 exports.version = '0.0.3';
 exports.create = function (config) {
     var view = require('./view'),
-        model = require('./model');
+        model = require('./model'),
+        config = require('./defaultConfig')(config);
 
     var graph = {
-            initialConfig: config,
+            config: config,
             view: new view(config.view),
             nodeTypes: config.nodeTypes
         },
         keyNodes = {};
 
-    graph.model = new model(graph.view, graph.nodeTypes, keyNodes, config);
+    graph.model = new model(graph, keyNodes);
 
     graph.view.graph.interactive = true;
 
     if (config.view.controls) {
-        require('./controls')(graph, config.view.controls, keyNodes);
+        require('./controls')(graph, keyNodes);
     }
     require('./render')(graph);
 
